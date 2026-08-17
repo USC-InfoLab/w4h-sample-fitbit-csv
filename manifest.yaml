@@ -1,0 +1,72 @@
+vendor: fitbit
+format: csv
+version: "1.0.0"
+title: Fitbit CSV sample package
+description: Synthetic Fitbit-style CSV exports for W4H demos and importer tests.
+importer_repo: https://github.com/USC-InfoLab/w4h-sample-fitbit-csv-importer
+
+signals:
+  - slug: subjects
+    file: data/fitbit_subjects.csv
+    description: Subject enrollment window (study period per participant).
+    fitbit_api_url: null
+    columns:
+      - name: id
+        type: text
+        description: Subject identifier (Fitbit-encoded user id in exports).
+      - name: start_date
+        type: date
+        description: Start of data collection window for this subject.
+      - name: end_date
+        type: date
+        description: End of data collection window for this subject.
+    geomts_mapping:
+      signal_type: subjects
+      subject: id
+      time: null
+      values: []
+
+  - slug: weight
+    file: data/fitbit_weight.csv
+    description: Body weight log from Fitbit Web API Get Weight Log.
+    fitbit_api_url: https://dev.fitbit.com/build/reference/web-api/body/get-weight-log/
+    columns:
+      - name: id
+        type: text
+        description: Subject identifier.
+      - name: date
+        type: date
+        description: Date of measurement.
+      - name: time
+        type: text
+        description: Time of measurement (may include timezone).
+      - name: weight
+        type: double precision
+        description: Weight in kilograms.
+      - name: bmi
+        type: double precision
+        description: Body mass index.
+      - name: fat_percent
+        type: double precision
+        description: Body fat percentage (optional in export).
+      - name: source
+        type: text
+        description: Data source label from Fitbit export.
+    geomts_mapping:
+      signal_type: weight
+      subject: id
+      time:
+        combine: [date, time]
+      values:
+        - source: weight
+          name: weight_kg
+          type: double precision
+          description: Weight in kilograms
+        - source: bmi
+          name: bmi
+          type: double precision
+          description: Body mass index
+        - source: fat_percent
+          name: fat_percent
+          type: double precision
+          description: Body fat percentage
