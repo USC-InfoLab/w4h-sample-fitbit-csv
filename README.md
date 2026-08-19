@@ -16,6 +16,8 @@ Synthetic **Fitbit CSV** sample package for the W4H Toolkit (data + `manifest.ya
 |------|-------------|
 | `data/fitbit_subjects.csv` | Subject id and study window (`start_date`, `end_date`) |
 | `data/fitbit_weight.csv` | Weight, BMI, body fat — [Fitbit Get Weight Log](https://dev.fitbit.com/build/reference/web-api/body/get-weight-log/) |
+| `data/fitbit_heart_rate.csv` | Intraday heart rate (wear proxy) — [Fitbit HR Intraday](https://dev.fitbit.com/build/reference/web-api/intraday/get-heartrate-intraday-by-date/) |
+| `data/fitbit_calories.csv` | Intraday calories + optional `mets` — [Fitbit Activity Intraday](https://dev.fitbit.com/build/reference/web-api/intraday/get-activity-intraday-by-date/) |
 
 Column definitions and GeoMTS mapping hints are in [`manifest.yaml`](manifest.yaml).
 

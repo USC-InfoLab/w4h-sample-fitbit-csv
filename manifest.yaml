@@ -1,8 +1,8 @@
 vendor: fitbit
 format: csv
-version: "1.0.0"
+version: "1.1.0"
 title: Fitbit CSV sample package
-description: Synthetic Fitbit-style CSV exports for W4H demos and importer tests.
+description: Synthetic Fitbit-style CSV exports for W4H demos and importer tests (subjects, weight, heart_rate, calories).
 importer_repo: https://github.com/USC-InfoLab/w4h-sample-fitbit-csv-importer
 
 signals:
@@ -70,3 +70,66 @@ signals:
           name: fat_percent
           type: double precision
           description: Body fat percentage
+
+  - slug: heart_rate
+    file: data/fitbit_heart_rate.csv
+    description: Intraday heart rate (wear proxy for WP2). Non-zero BPM implies the band is worn.
+    fitbit_api_url: https://dev.fitbit.com/build/reference/web-api/intraday/get-heartrate-intraday-by-date/
+    columns:
+      - name: id
+        type: text
+        description: Subject identifier.
+      - name: date
+        type: date
+        description: Date of measurement.
+      - name: timestamp
+        type: text
+        description: Time of measurement (HH:MM:SS).
+      - name: value
+        type: integer
+        description: Heart rate in beats per minute.
+    geomts_mapping:
+      signal_type: heart_rate
+      subject: id
+      time:
+        combine: [date, timestamp]
+      values:
+        - source: value
+          name: bpm
+          type: integer
+          description: Heart rate in beats per minute
+
+  - slug: calories
+    file: data/fitbit_calories.csv
+    description: Intraday calories burned. Optional mets column on rows for WP3 validation.
+    fitbit_api_url: https://dev.fitbit.com/build/reference/web-api/intraday/get-activity-intraday-by-date/
+    columns:
+      - name: id
+        type: text
+        description: Subject identifier.
+      - name: date
+        type: date
+        description: Date of measurement.
+      - name: time
+        type: text
+        description: Time of measurement (HH:MM:SS).
+      - name: value
+        type: double precision
+        description: Calories burned in this interval.
+      - name: mets
+        type: integer
+        description: Vendor MET value when present (subset of rows; used to validate WP3).
+    geomts_mapping:
+      signal_type: calories
+      subject: id
+      time:
+        combine: [date, time]
+      values:
+        - source: value
+          name: calories
+          type: double precision
+          description: Calories burned in this interval
+        - source: mets
+          name: mets
+          type: integer
+          description: Vendor metabolic equivalent when present
