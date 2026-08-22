@@ -16,8 +16,19 @@ Synthetic **Fitbit CSV** sample package for the W4H Toolkit (data + `manifest.ya
 |------|-------------|
 | `data/fitbit_subjects.csv` | Subject id and study window (`start_date`, `end_date`) |
 | `data/fitbit_weight.csv` | Weight, BMI, body fat — [Fitbit Get Weight Log](https://dev.fitbit.com/build/reference/web-api/body/get-weight-log/) |
+| `data/fitbit_heart_rate.csv` | Intraday heart rate (bpm) — [Fitbit Get Heart Rate Intraday](https://dev.fitbit.com/build/reference/web-api/intraday/get-heartrate-intraday-by-date/) |
+| `data/fitbit_calories.csv` | Intraday calories burned + METs — [Fitbit Get Calories Intraday](https://dev.fitbit.com/build/reference/web-api/intraday/get-calories-intraday-by-date/) |
 
-Column definitions and GeoMTS mapping hints are in [`manifest.yaml`](manifest.yaml).
+Column definitions, units, sampling intervals, and GeoMTS mapping hints are in [`manifest.yaml`](manifest.yaml) (see its `references` block for the Fitbit units/localization and intraday-resolution docs this sample follows). Note: `unit`/`sampling_interval` are manifest documentation only — the importer does not currently persist them to the platform database (see comment in `manifest.yaml`).
+
+## Known data-quality fixtures
+
+This sample deliberately contains two realistic data-quality problems, left in the CSVs on purpose (not flagged in `manifest.yaml` — that file is the vendor mapping used to ingest and document the data, not an answer key). They exist so ingest/analysis tooling has something real to catch:
+
+- **Outlier** — `data/fitbit_weight.csv`, subject `02f77d2`, `2018-11-09`: `weight=7.6` / `bmi=2.48`, versus ~73–77 kg for the same subject in the surrounding week. Reads as a manual-entry decimal slip. This is a statistical anomaly (the value parses fine as a valid `double precision`), so it can only be caught by analysis that looks across a subject's/cohort's other rows — not by ingest-time validation.
+- **Tampered timestamp** — `data/fitbit_heart_rate.csv`, subject `02f77d2`, `2018-07-12`, row `15:06:37`: every other row in that intraday series lands on `:00` seconds, matching the signal's declared `sampling_interval: 1min`. This one row doesn't, simulating a hand-edited or corrupted export that no longer matches vendor spec. Unlike the outlier above, this is a structural mismatch the importer can and does check for at import time (see the paired [importer repo](https://github.com/USC-InfoLab/w4h-sample-fitbit-csv-importer)'s vendor-spec report).
+
+Do not "fix" either row — if you add a new deliberate fixture, document it here, not in `manifest.yaml`.
 
 ## License
 
