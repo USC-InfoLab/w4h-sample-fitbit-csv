@@ -5,12 +5,12 @@ title: Fitbit CSV sample package
 description: Synthetic Fitbit-style CSV exports for W4H demos and importer tests.
 importer_repo: https://github.com/USC-InfoLab/w4h-sample-fitbit-csv-importer
 
-# Column-level `unit` and signal-level `sampling_interval` below are manifest
-# documentation only — the importer forwards the full `columns` array to
-# w4h-api's /import/csv-batch, but ensurePhysicalTable() only reads `name`
-# and `type` off each column; unit/interval are not persisted to w4h.tables
-# (which stores one `description` per signal/table, not per column). Treat
-# these as human/tooling reference until a schema change adds real storage.
+# The sample importer posts each signal `description`, `columns` (including
+# `description`), and `geomts_mapping` to /import/csv-batch. w4h-api stores the
+# signal description on w4h.tables and mirrors signal and column descriptions as
+# COMMENT ON TABLE / COMMENT ON COLUMN. `sampling_interval` and each geomts
+# value `unit` are stored on w4h.tables.mapping_json. Column-level `unit` below
+# repeats that unit next to the column for readers of this file.
 references:
   - title: Fitbit Web API — units & localization (Accept-Language)
     url: https://dev.fitbit.com/build/reference/web-api/developer-guide/application-design/
@@ -48,33 +48,41 @@ signals:
 
   - slug: weight
     file: data/fitbit_weight.csv
-    description: Body weight log from Fitbit Web API Get Weight Log.
+    description: >-
+      Body-weight log from Fitbit Get Weight Log. One log entry per row, not an
+      intraday series. This sample is metric.
     fitbit_api_url: https://dev.fitbit.com/build/reference/web-api/body/get-weight-log/
     columns:
       - name: id
         type: text
-        description: Subject identifier.
+        description: Fitbit encoded user id.
       - name: date
         type: date
-        description: Date of measurement.
+        description: Log date (yyyy-MM-dd).
       - name: time
         type: text
-        description: Time of measurement (may include timezone).
+        description: >-
+          Measurement time (HH:mm:ss). Fitbit sets this to the last second of the
+          day when the user did not enter a time. This sample uses 23:59:59+00:00.
       - name: weight
         type: double precision
-        description: Weight in kilograms.
+        description: >-
+          Body weight in kilograms. Live API weight follows Accept-Language:
+          metric kg, en_US pounds, en_GB decimal stone.
         unit: kg
       - name: bmi
         type: double precision
-        description: Body mass index (weight_kg / height_m^2).
+        description: Fitbit-calculated body mass index, format X.XX (kg/m^2).
         unit: kg/m^2
       - name: fat_percent
         type: double precision
-        description: Body fat percentage (optional in export).
+        description: Body-fat percentage (API field fat). Optional; blank when not recorded.
         unit: percent
       - name: source
         type: text
-        description: Data source label from Fitbit export.
+        description: >-
+          Entry origin: API (third-party, manual app entry, or an edited scale
+          reading), Aria (Aria or Aria 2), AriaAir, or Withings.
     geomts_mapping:
       signal_type: weight
       subject: id
@@ -84,34 +92,45 @@ signals:
         - source: weight
           name: weight_kg
           type: double precision
-          description: Weight in kilograms
+          description: >-
+            Body weight in kilograms. Live API weight follows Accept-Language:
+            metric kg, en_US pounds, en_GB decimal stone.
+          unit: kg
         - source: bmi
           name: bmi
           type: double precision
-          description: Body mass index
+          description: Fitbit-calculated body mass index, format X.XX (kg/m^2).
+          unit: kg/m^2
         - source: fat_percent
           name: fat_percent
           type: double precision
-          description: Body fat percentage
+          description: Body-fat percentage (API field fat). Optional; blank when not recorded.
+          unit: percent
 
   - slug: heart_rate
     file: data/fitbit_heart_rate.csv
-    description: Intraday heart rate from Fitbit Web API Get Heart Rate Intraday Time Series.
+    description: >-
+      Intraday heart rate from Fitbit Get Heart Rate Intraday by Date,
+      detail-level 1min (datasetInterval 1, datasetType minute). One on-wrist
+      sample per row. Times are HH:mm:ss with no offset (user timezone unless
+      the export requested timezone=UTC).
     fitbit_api_url: https://dev.fitbit.com/build/reference/web-api/intraday/get-heartrate-intraday-by-date/
     sampling_interval: 1min
     columns:
       - name: id
         type: text
-        description: Subject identifier.
+        description: Fitbit encoded user id.
       - name: date
         type: date
-        description: Date of measurement.
+        description: Calendar date (yyyy-MM-dd) of the heart-rate log.
       - name: timestamp
         type: text
-        description: Time of measurement.
+        description: Time the intraday value was recorded (HH:mm:ss).
       - name: value
         type: integer
-        description: Heart rate in beats per minute.
+        description: >-
+          Heart rate in beats per minute (bpm). Locale-independent. A non-zero
+          value means the band was worn.
         unit: bpm
     geomts_mapping:
       signal_type: heart_rate
@@ -122,31 +141,47 @@ signals:
         - source: value
           name: heart_rate_bpm
           type: integer
-          description: Heart rate in beats per minute
+          description: >-
+            Heart rate in beats per minute (bpm). Locale-independent. A non-zero
+            value means the band was worn.
+          unit: bpm
 
   - slug: calories
     file: data/fitbit_calories.csv
-    description: Intraday calories burned from Fitbit Web API Get Calories Intraday Time Series.
-    fitbit_api_url: https://dev.fitbit.com/build/reference/web-api/intraday/get-calories-intraday-by-date/
+    description: >-
+      Intraday calories from Fitbit Get Activity Intraday by Date, resource
+      calories, detail-level 1min. Intraday totals are on-wrist only; Fitbit
+      daily summaries also include off-wrist estimates. If a tracker is unsynced
+      more than 7 days, older intraday calories can be a flat BMR/EER estimate
+      (kcal per minute = BMR/24/60) rather than measured burn.
+    fitbit_api_url: https://dev.fitbit.com/build/reference/web-api/intraday/get-activity-intraday-by-date/
     sampling_interval: 1min
     columns:
       - name: id
         type: text
-        description: Subject identifier.
+        description: Fitbit encoded user id.
       - name: date
         type: date
-        description: Date of measurement.
+        description: Calendar date (yyyy-MM-dd).
       - name: time
         type: text
-        description: Time of measurement.
+        description: Time of the interval (HH:mm:ss).
       - name: value
         type: double precision
-        description: Calories burned.
+        description: >-
+          Kilocalories (kcal) burned during this 1-minute interval, not a daily
+          total and not a per-hour rate. Always kcal, in every Fitbit unit
+          system. Sum rows for on-wrist energy.
         unit: kcal
       - name: mets
         type: integer
-        description: Metabolic equivalent of task (METs), scaled by 10.
-        unit: METs x10 (divide by 10 for true METs)
+        description: >-
+          Fitbit METs at that minute, stored as an integer equal to true METs
+          times 10 (sample resting rows are 10, about 1.035 kcal/min). Divide by
+          10 before using standard MET tables. Returned only on the calories
+          resource. Current Fitbit docs say "METs value" and do not state the
+          scale; the times-10 factor is taken from this sample.
+        unit: METs x10
     geomts_mapping:
       signal_type: calories
       subject: id
@@ -156,8 +191,18 @@ signals:
         - source: value
           name: calories
           type: double precision
-          description: Calories burned
+          description: >-
+            Kilocalories (kcal) burned during this 1-minute interval, not a daily
+            total and not a per-hour rate. Always kcal, in every Fitbit unit
+            system. Sum rows for on-wrist energy.
+          unit: kcal
         - source: mets
           name: mets
           type: integer
-          description: Metabolic equivalent of task (METs), scaled by 10
+          description: >-
+            Fitbit METs at that minute, stored as an integer equal to true METs
+            times 10 (sample resting rows are 10, about 1.035 kcal/min). Divide by
+            10 before using standard MET tables. Returned only on the calories
+            resource. Current Fitbit docs say "METs value" and do not state the
+            scale; the times-10 factor is taken from this sample.
+          unit: METs x10

@@ -17,9 +17,9 @@ Synthetic **Fitbit CSV** sample package for the W4H Toolkit (data + `manifest.ya
 | `data/fitbit_subjects.csv` | Subject id and study window (`start_date`, `end_date`) |
 | `data/fitbit_weight.csv` | Weight, BMI, body fat — [Fitbit Get Weight Log](https://dev.fitbit.com/build/reference/web-api/body/get-weight-log/) |
 | `data/fitbit_heart_rate.csv` | Intraday heart rate (bpm) — [Fitbit Get Heart Rate Intraday](https://dev.fitbit.com/build/reference/web-api/intraday/get-heartrate-intraday-by-date/) |
-| `data/fitbit_calories.csv` | Intraday calories burned + METs — [Fitbit Get Calories Intraday](https://dev.fitbit.com/build/reference/web-api/intraday/get-calories-intraday-by-date/) |
+| `data/fitbit_calories.csv` | Intraday calories burned + METs — [Fitbit Get Activity Intraday](https://dev.fitbit.com/build/reference/web-api/intraday/get-activity-intraday-by-date/) (`resource=calories`) |
 
-Column definitions, units, sampling intervals, and GeoMTS mapping hints are in [`manifest.yaml`](manifest.yaml) (see its `references` block for the Fitbit units/localization and intraday-resolution docs this sample follows). Note: `unit`/`sampling_interval` are manifest documentation only — the importer does not currently persist them to the platform database (see comment in `manifest.yaml`).
+Column definitions, units, sampling intervals, and GeoMTS mapping hints are in [`manifest.yaml`](manifest.yaml) (see its `references` block for the Fitbit units/localization and intraday-resolution docs this sample follows). On import, signal and column descriptions are stored as PostgreSQL table and column comments. Sampling interval and value units are stored on `w4h.tables.mapping_json`.
 
 ## Known data-quality fixtures
 
