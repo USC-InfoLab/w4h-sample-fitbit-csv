@@ -1,6 +1,6 @@
 vendor: fitbit
 format: csv
-version: "1.0.0"
+version: "1.1.0"
 title: Fitbit CSV sample package
 description: Synthetic Fitbit-style CSV exports for W4H demos and importer tests.
 importer_repo: https://github.com/USC-InfoLab/w4h-sample-fitbit-csv-importer
